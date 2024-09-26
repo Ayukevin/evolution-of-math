@@ -1,0 +1,53 @@
+---
+title: "hw_0925"
+author: "黃楷越"
+date: "2024-09-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Q1：special pattern depends on x
+
+
+```{r pattern}
+x= int(input("enter the x:"))
+
+pattern=function(x){
+  pass
+}
+
+
+if (x==0){
+  print()
+}elif (x <0 ){
+  print("pls enter knon-negative interger")
+}else{
+  pattern(x)
+}
+```
+
+Q2:Fibonacci sequence
+題目未規定明確型態，因此以設計到第十個數
+
+```{r series, echo=FALSE}
+fibonacci = function(a,b){
+  c = a+b
+  return(c)
+}
+
+a= 0
+b =1
+x = c(0,1)
+for (i in 1:10){
+  c = fibonacci(a,b)
+  x = c(x,c)
+  a=b
+  b=c
+}
+print(x)
+```
+
+
