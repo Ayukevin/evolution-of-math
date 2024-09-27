@@ -13,20 +13,63 @@ Q1：special pattern depends on x
 
 
 ```{r pattern}
-x= int(input("enter the x:"))
+x= 3#int(input("enter the x:"))
 
-pattern=function(x){
-  pass
+string = function(a,b){ #a,b 定義起點和終點
+  for (i in a:b){
+    if (i == 1){
+      line = '*-*'
+    }else if (i %%2 == 0){
+      line = paste0('-',line,'-')
+    }else if (i %%2 == 1 ){
+      line = paste0('*',line,'*')
+    }
+  }
+  return(line)
 }
 
+pattern = function(x) {
+  a = x %/% 2  # 商數
+  b = x %% 2  # 餘數
+  line = c() 
+  
+  for (i in 1:a) {  
+    line = c(string(1, i), line)  
+  }
+  
+  if (b ==1 ){
+    line =c(line,"|")
+  }
+  
+  for (i in 2:length(line)){
+    a = nchar(line)
+    space = (max(a)-a[i])%/%2
+    a = strrep(" ",space-1)
+    line[[i]] = paste(a,line[[i]],a)
+  }
+  print(line)
+
+}
 
 if (x==0){
   print()
-}elif (x <0 ){
+}else if (x <0 ){
   print("pls enter knon-negative interger")
 }else{
   pattern(x)
 }
+```
+```{r}
+a =c("-*-*-*-*-"," *-*-*-* ","  -*-*-  ","   *-*   ","    |    ")
+for (i in 1:length(a)){
+  print(i)
+}
+for (i in length(a):1){
+  print(i)
+}
+
+
+
 ```
 
 Q2:Fibonacci sequence
