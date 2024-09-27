@@ -13,7 +13,8 @@ Q1：special pattern depends on x
 
 
 ```{r pattern}
-x= 3#int(input("enter the x:"))
+cat("pls enter the num:",'\n')
+x = scan(n=1,what=double(),quiet = TRUE)
 
 string = function(a,b){ #a,b 定義起點和終點
   for (i in a:b){
@@ -41,39 +42,42 @@ pattern = function(x) {
     line =c(line,"|")
   }
   
-  for (i in 2:length(line)){
-    a = nchar(line)
-    space = (max(a)-a[i])%/%2
-    a = strrep(" ",space-1)
-    line[[i]] = paste(a,line[[i]],a)
+  if (length(line) >= 2){
+    for (i in 2:length(line)){
+      a = nchar(line)
+      space = (max(a)-a[i])%/%2
+      a = strrep(" ",space-1)
+      line[[i]] = paste(a,line[[i]],a)
+    }
   }
-  print(line)
+  
+  
+  
+  cat(line, sep="\n")
+  if (b ==1 ){
+    line = head(line, -1)
+  }
+  cat(rev(line), sep="\n")
 
 }
 
-if (x==0){
-  print()
-}else if (x <0 ){
-  print("pls enter knon-negative interger")
+if (x == as.integer(x)) {
+  if (x==0){
+    print("")
+  }else if (x <0 ){
+    print("pls enter non-negative interger")
+  }else if (x ==1){
+    print('|')
+  }else{
+    pattern(x)
+  }
 }else{
-  pattern(x)
+  print('pls enter non-negative  interger')
 }
-```
-```{r}
-a =c("-*-*-*-*-"," *-*-*-* ","  -*-*-  ","   *-*   ","    |    ")
-for (i in 1:length(a)){
-  print(i)
-}
-for (i in length(a):1){
-  print(i)
-}
-
-
-
 ```
 
 Q2:Fibonacci sequence
-題目未規定明確型態，因此以設計到第十個數
+題目未規定明確需要設計的型態，因此以設計到第十個數為主
 
 ```{r series, echo=FALSE}
 fibonacci = function(a,b){
