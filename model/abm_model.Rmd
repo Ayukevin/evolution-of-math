@@ -1,0 +1,64 @@
+---
+title: "ABM"
+author: "黃楷越"
+date: "2024-10-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## setting
+
+```{r cars}
+nAgent =600 #人數
+nLang =2 #語言數
+fLang = c(1,1) #語言持有比
+birthAt = 50 #跌代次數
+tmax =100 
+payoff_table = matrix(c(10,8,7,9),nrow = 2,ncol = 2) #占比
+```
+
+## init
+
+```{r pressure, echo=FALSE}
+language = sample(nLang,nAgent,replace = T,prob = fLang)
+payoff = rep(0,nAgent)
+data = matrix(NA,nrow = tmax,ncol = nLang )
+```
+
+##func
+```{r}
+pairID = matrix(sample(nAgent),ncol = 2, byrow=TRUE)
+mylang = language[pairID[,1]]
+urlang = language[pairID[,2]]
+
+myPay = payoff_table[cbind(mylang,urlang)]
+urPay = payoff_table[cbind(urlang,mylang)]
+payoff[pairID] = payoff[pairID] + c(myPay,urPay)
+
+```
+
+語言人口判斷
+```{r}
+birth = payoff >= birthAt
+nbirth = sum(birth)
+dieID  = order(payoff)[0:birth]
+
+language[dieID] = language[birth] #取代較弱的人
+payoff[dieID] = 0
+payoff[birth] = payoff[birth] - birthAt
+
+```
+main
+```{r}
+for (k in 1:round){
+  data[i,] = c(sum(language==1),sum(language==2))
+}
+matplot(data,type ='l')
+legend('topright',legend = 1:nLanguage,col = 1:nLanguage,lty=1:nLanguage)
+
+```
+
+
