@@ -1,0 +1,67 @@
+---
+title: "Population_interaction"
+author: "黃楷越"
+date: "2024-10-28"
+output: html_document
+---
+import 'deSolve' package 
+```{r}
+library(deSolve)
+```
+
+Main function
+```{r }
+pop_interaction = function(state,t){
+  interaction_model = function(t, state, parameters) {
+    with(as.list(c(state, parameters)), {
+      #provided from the topic
+      dxdt = x * (2 - 0.08 * x - 0.08 * y - 0.5 * z)
+      dydt = y * (2 - 0.12 * x - 0.08 * y - 0.05 * z)
+      dzdt = z * (0.4 * x + 0.04 * y - 2)
+      
+      list(c(dxdt, dydt, dzdt))
+    })
+  }
+  
+  #caculate  
+  solution = ode(y = state, times = t,
+                 func = interaction_model, parms = NULL)
+  
+  #time series
+  matplot(t, solution[,-1], type = "l", 
+          xlab = "time", ylab = "Group size",
+          col = c("blue", "red", "green"))
+  
+  legend("topleft", legend = c("x", "y", "z"), 
+         col = c("blue", "red", "green"), lty = 1, lwd = 2)
+  
+  #pairwise
+  pairs(solution[,-1], col = c("blue", "red", "green"), 
+        labels = c("x", "y", "z"))
+
+}
+```
+
+Q2
+*Assume all species start with the same number 
+```{r }
+states = c(x = 10, y = 10, z = 10)
+time = seq(0, 500, 0.1)
+pop_interaction(state = states,t=time)
+```
+
+
+```{r }
+#start from different group size
+states = c(x = 20, y = 10, z = 5) 
+time = seq(0, 500, 0.1)
+pop_interaction(state = states,t=time)
+
+```
+
+```{r }
+#start from different group size
+states = c(x = 50, y = 5, z = 20)
+time = seq(0, 20, 0.1)
+pop_interaction(state = states,t=time)
+```
