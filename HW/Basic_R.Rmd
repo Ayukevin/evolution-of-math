@@ -1,0 +1,115 @@
+---
+title: "hw_0925"
+author: "黃楷越"
+date: "2024-09-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Q1：special pattern depends on x
+
+
+```{r pattern}
+#let user enter number
+cat("pls enter the num:",'\n')
+x = scan(n=1,what=double(),quiet = TRUE)
+
+#special string gen.
+string = function(a,b){ #a,b 定義起點和終點
+  for (i in a:b){
+    if (i == 1){
+      line = '*-*'
+    }else if (i %%2 == 0){
+      line = paste0('-',line,'-')
+    }else if (i %%2 == 1 ){
+      line = paste0('*',line,'*')
+    }
+  }
+  return(line)
+}
+
+#processing
+pattern = function(x) {
+  a = x %/% 2  # 商
+  b = x %% 2  # 餘
+  line = c() 
+  #gen. string
+  for (i in 1:a) {  
+    line = c(string(1, i), line)  
+  }
+  #odd number special
+  if (b ==1 ){
+    line =c(line,"|")
+  }
+  #fill the blank to align to center #use gpt 
+  if (length(line) >= 2){
+    for (i in 2:length(line)){
+      a = nchar(line) #gpt
+      space = (max(a)-a[i])%/%2
+      a = strrep(" ",space-1) #gpt
+      line[[i]] = paste(a,line[[i]],a)
+    }
+  }
+  
+  #concatenate all string in line #use gpt 
+  cat(line, sep="\n")
+  if (b ==1 ){
+    line = head(line, -1) #remove "|"
+  }
+  cat(rev(line), sep="\n")
+
+}
+
+#main
+if (x == as.integer(x)) {
+  if (x==0){
+    print("")
+  }else if (x <0 ){
+    print("pls enter non-negative interger")
+  }else if (x ==1){
+    print('|')
+  }else{
+    pattern(x)
+  }
+}else{
+  print('pls enter non-negative  interger')
+}
+```
+
+Q2:Fibonacci sequence
+題目未規定明確需要設計的型態，因此以設計到第十個數為主
+
+```{r series, echo=FALSE}
+fibonacci = function(a,b){
+  c = a+b
+  return(c)
+}
+
+a= 0
+b =1
+x = c(0,1)
+for (i in 1:10){
+  c = fibonacci(a,b)
+  x = c(x,c)
+  a=b
+  b=c
+}
+print(x)
+```
+
+```{r}
+# 定義參數
+n <- 28       # 試驗次數
+p <- 0.5      # 成功機率
+x <- 15        # 我們要計算的臨界值，即 P(X <= 5)
+
+# 使用 pbinom 計算累積機率
+prob <- pbinom(x, n, p)
+print(prob)
+
+
+sort(a)
+````
