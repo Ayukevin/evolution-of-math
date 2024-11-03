@@ -45,8 +45,8 @@ pop_interaction = function(state,t){
 Q2
 *Assume all species start with the same number 
 ```{r }
-states = c(x = 10, y = 10, z = 10)
-time = seq(0, 500, 0.1)
+states = c(x = 15, y = 3, z = 5)
+time = seq(0, 1000, 0.1)
 pop_interaction(state = states,t=time)
 ```
 
