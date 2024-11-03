@@ -1,0 +1,148 @@
+---
+title: "Schelling_model"
+author: "黃楷越"
+date: "2024-10-11"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+## == settinge== 
+
+#library and seed
+library(ComplexHeatmap)
+library(circlize)
+set.seed(145)
+
+#parameter
+grid_size = 10 #大小
+group = c(0,1,2) #0:group1；1:group2；2:empty house
+birthAt = 10 #迭代次數
+probability = c(4,4,2) #g1:g2:空屋
+satisfaction = 0.6
+empty_code =2 #空屋代號
+
+#initial
+payoff_table = matrix(
+  sample(group,replace = TRUE,prob = probability, size = grid_size^2),
+  nrow = grid_size,
+) 
+color_map = colorRamp2(group, c("blue", "red", "white"))
+
+```
+
+
+
+```{r}
+## == funtion == 
+# == func1: check neoghbor around to decide move or not
+checkneighbor = function(grid,y,x){
+  
+  #8 blocks around the center
+  around = list(c(y-1, y, y+1), c(x-1, x, x+1))
+  #exclude the wall around the grid
+  if ( y-1 == 0 ) { 
+    around[[1]] = around[[1]][-1] 
+  }
+  if ( x-1 == 0 ) {
+    around[[2]] = around[[2]][-1] 
+  }
+  if ( y == nrow(grid)) {
+    around[[1]] = around[[1]][-3] 
+  }
+  if ( x == ncol(grid)) {
+    around[[2]] = around[[2]][-3]
+  }
+  
+  neighbor <- list() 
+  index <- 1
+  for (i in 1:3) {
+    for (j in 1:3) {
+      if (i == 2 && j == 2) {
+        next
+      }
+      neighbor[[index]] <- c(around[[1]][i], around[[2]][j])
+      index <- index + 1
+    }
+  }
+  
+  #checking aruond
+  resident = grid[y,x]
+  times = 0 
+  same = 0 #value same as center
+  for (i in 1:8) {
+    y = neighbor[[i]][1] 
+    x = neighbor[[i]][2] 
+    status = grid[y,x]
+    if (!is.na(status)){
+      times = times +1
+      if (status == resident){
+        same = same + 1
+      }
+    }
+  }
+  
+  #move or not
+  move_tends = same / times
+  #if  move_tends < satisfaction, return TRUE
+  return(move_tends < satisfaction) 
+}
+
+# ==func2: move to the empty house
+move = function(grid,y,x){
+  selected_value = grid[y,x]
+  empty_positions = which(grid == empty_code, arr.ind = TRUE) # gen by GP4 40
+  if (length(empty_positions) > 0) {
+    # randomly select an empty house(status = 2)
+    new_position <- empty_positions[sample(1:nrow(empty_positions), 1),]
+    # move the house
+    grid[new_position[1], new_position[2]] = selected_value
+    grid[y,x] = empty_code
+  }
+  return(grid) 
+}
+
+# ==func3:draw 
+draw = function(grid,color,times){
+  print(Heatmap(grid, 
+          name = paste("Round",times), 
+          col = color,
+          # 移除行列樹狀圖
+          cluster_rows = FALSE,    
+          cluster_columns = FALSE, 
+          # 產生格線顏色
+          rect_gp = gpar(col = "black"), 
+          # 設置行列標籤
+          #row_labels = 1:grid_size,      
+          #column_labels = 1:grid_size
+          )
+  )
+}
+```
+
+```{r}
+## ==main==
+par(mfrow=c(birthAt, 1))
+copy_grid = payoff_table
+#print the original grid
+draw(copy_grid,color_map,0)
+for (i in 1:birthAt){
+  #check block one by one
+  for (y in 1:grid_size){
+    for (x in 1:grid_size){
+      status = checkneighbor(copy_grid,y,x)
+      if (status){
+        copy_grid = move(copy_grid,y,x)
+      }
+    }
+  }
+}
+draw(copy_grid,color_map,birthAt)
+```
+
