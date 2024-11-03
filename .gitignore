@@ -1,4 +1,6 @@
-.docx
-.pdf
-.log
-.tex
+*.docx
+*.pdf
+*.log
+*.tex
+*.html
+
