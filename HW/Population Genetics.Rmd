@@ -1,0 +1,73 @@
+---
+title: "Single-gene Population Genetics HW"
+author: "黃楷越"
+date: "2024-11-10"
+output: html_document
+---
+
+```{r Q1 Q2}
+s = 0.5
+p = seq(0, 1, 0.01)
+
+# 單套染色體
+p_single_next = p / (p + (1- p) * (1- s))
+
+# 雙套染色體顯隱性
+p_dominant_next = (p^2 + p* (1- p)) / (p^2 + 2* p* (1- p)+(1- p)^2*(1- s))
+
+# 雙套染色體半顯性
+p_semi_dominant_next = (p^2 + p * (1 - p) * (1 - s/2)) / (p^2 + 2 * p * (1 - p) * (1 - s/2) + (1 - p)^2 * (1 - s))
+
+
+# 繪圖
+plot(p, p_single_next, type = 'l', col = 'red', ylim = c(0, 1), xlab = "pt", ylab = "pt+1")
+lines(p, p_dominant_next, col = 'blue')
+lines(p, p_semi_dominant_next, col = 'green')
+abline(0, 1, col = 'black', lty = 2)
+legend("bottomright", legend = c("single", "dominant", "semi_dominant"), col = c("red", "blue", "green"), lty = 1)
+```
+
+
+
+```{r}
+plot_time_series <- function(s = 0.5, p0 = seq(0, 1, 0.1), tmax = 50, type = c("single", "dominant", "semi_dominant")) {
+  # 定義遞迴公式
+  recursion_formula <- function(p, s, type) {
+    if (type == "single") {
+      return(p / (p + (1 - p) * (1 - s)))
+    } else if (type == "dominant") {
+      return((p^2 + p * (1 - p)) / (p^2 + 2 * p * (1 - p) + (1 - p)^2 * (1 - s)))
+    } else if (type == "semi_dominant") {
+      return((p^2 + p * (1 - p) * (1 - s/2)) / (p^2 + 2 * p * (1 - p) * (1 - s/2) + (1 - p)^2 * (1 - s)))
+    } 
+  }
+  
+  # 設定顏色
+  colors = rainbow(length(p0))
+  
+  # 探索每個初始頻率
+  plot(0:tmax, rep(NA, tmax+1), ylim = c(0,1), xlab = "t", ylab = "Pt", main = paste(type, "time series"))
+  
+  for (i in seq_along(p0)) {
+    p = p0[i]
+    freq = numeric(tmax + 1)
+    freq[1] = p
+    for (t in 1:tmax) {
+      p = recursion_formula(p, s, type)
+      freq[t+1] = p
+    }
+    lines(0:tmax, freq, col = colors[i])
+  }
+  legend("bottomright", legend = paste("p0 =", seq(0, 1, 0.1)),
+col = colors, lty = 1, cex=0.5)
+}
+
+# 測試函數
+plot_time_series(type = "single")
+plot_time_series(type = "dominant")
+plot_time_series(type = "semi_dominant")
+
+
+```
+
+
