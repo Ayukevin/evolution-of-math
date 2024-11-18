@@ -36,6 +36,8 @@ competition = function(t,state,parameters){
   })
 }
 
+
+### don't execute it!!!
 state = c(x0s,y0s)
 parameter = c(a,b,Rx,Ry,Kx,Ky)
 
