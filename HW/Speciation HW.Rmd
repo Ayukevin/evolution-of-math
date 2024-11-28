@@ -1,0 +1,118 @@
+---
+title: "Speciation HW"
+author: "黃楷越"
+date: "2024-11-28"
+output: html_document
+---
+# parameter
+```{r}
+Sh =0.3
+Sd = 0.01
+m =0.05 
+
+Place1 = c(0.99,0,0,0.01) #AB, Ab, aB, ab
+Place2 = c(0.02,0,0,0.98) #AB, Ab, aB, ab
+
+fit1 = 1+c(1,-1,-1,-1)*c(Sd,Sh,Sh,Sd)
+fit2 = 1+c(-1,-1,-1,1)*c(Sd,Sh,Sh,Sd)
+
+tMAX =100
+```
+
+# migration function
+
+
+```{r }
+migration = function(p1,p2){ #place1,place2
+  place1 = (1-m)*p1 + m*p2
+  place2 = (1-m)*p2 + m*p1
+  
+  c(place1,place2)
+}
+```
+
+# natural selection function
+| 基因型 |  AB    |  Ab    |  aB    |  ab    |
+|-------|--------|--------|--------|--------|
+| 棲地1  | 1 + sd | 1 - sh | 1 - sh | 1 - sd |
+| 棲地2  | 1 - sd | 1 - sh | 1 - sh | 1 + sd |
+
+```{r }
+natural_selection = function(gene,fit){
+  gene*fit / sum(gene*fit)
+}
+```
+
+# sexual_selection function
+
+|   | A     | a     |
+|---|-------|-------|
+| A | 1+α   | 1     |
+| a | 1     | 1+α   |
+
+
+```{r }
+sexual_selection = function(gene,preference_matrix){
+  
+  total_A = gene[1] + gene[2]
+  total_a = gene[3] + gene[4]
+  
+  freq_A = total_A*preference_matrix[1,1]+total_a*preference_matrix[1,2]
+  freq_a = total_A*preference_matrix[2,1]+total_a*preference_matrix[2,2]
+  
+  next_gene = gene*c(freq_A,freq_A,freq_a,freq_a)
+  
+  next_gene/ sum(next_gene)
+}
+```
+
+# main function
+```{r }
+main =function(alpha){
+  preference_matrix = matrix(c(1+alpha,1,1,1+alpha),nrow = 2)
+  
+  data1 = matrix(0,nrow = tMAX+1, ncol = length(Place1),
+               dimnames = list(rep(1:(tMAX+1)),c('AB', 'Ab', 'aB', 'ab')))
+  data2 = matrix(0,nrow = tMAX+1, ncol = length(Place2),
+                 dimnames = list(rep(1:(tMAX+1)),c('AB', 'Ab', 'aB', 'ab')))
+  
+  data1[1,] = Place1
+  data2[1,] = Place2
+  
+  for (t in 1:tMAX){
+    place = migration(Place1,Place2)
+    
+    a = natural_selection(place[1:4],fit1)
+    Place1 = sexual_selection(a,preference_matrix)
+    data1[t+1,] = Place1
+    
+    a = natural_selection(place[5:8],fit2)
+    Place2 = sexual_selection(a,preference_matrix)
+    data2[t+1,] = Place2
+  }
+  
+  #plot
+  data1[tMAX+1,]
+  data2[tMAX+1,]
+  
+  par(mfrow = c(1, 2))
+  matplot(data1,type = 'l',xlab = 'tMAX', main = paste('Alpha =', alpha))
+  legend('topright',c('AB', 'Ab', 'aB', 'ab'),lty=1:4,col=1:4)
+  
+  matplot(data2,type = 'l',xlab = 'tMAX')
+  legend('topright',c('AB', 'Ab', 'aB', 'ab'),lty=1:4,col=1:4)
+}
+```
+
+比較 α = 0, α = 2, α = 4 的結果
+```{r}
+main(alpha=0)
+```
+
+```{r}
+main(alpha=2)
+```
+
+```{r}
+main(alpha=4)
+```
