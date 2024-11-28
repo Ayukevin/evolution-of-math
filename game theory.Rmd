@@ -1,0 +1,93 @@
+---
+title: "Game theory"
+author: "黃楷越"
+date: "2024-11-25"
+output: html_document
+---
+
+
+```{r cars}
+## ==parameters settings==
+n_agents =1200
+n_simulation = 100
+tMAX = 100
+p_strategy = c('scissors'=0.25,'rock'=0.25,'paper'=0.25,'random'=0.25)
+strategy = c('scissors','rock','paper','random')
+```
+
+
+```{r }
+## == randomization functioin ==
+random_or_not = function(player){
+  if (player=='random'){
+    return(sample(c('scissors','rock','paper'),1))
+  }else{
+    return(player)
+  }
+}
+
+## == decide it win or lose ==
+referee = function(a,b){
+  if (a==b){
+    return('tie')
+  }else if ((a=='scissors' &b=='paper')|
+            (a=='paper' &b=='rock')|
+            (a=='rock' &b=='scissors')
+            ){
+    return('win')
+  }else{
+    return('lose')
+  }
+}
+
+## == simulate tMAX rounds function ==
+main = function(tMAX){
+  players = c(rep("scissors", n_agents * p_strategy["scissors"]),
+              rep("rock", n_agents * p_strategy["rock"]),
+              rep("paper", n_agents * p_strategy["paper"]),
+              rep("random", n_agents * p_strategy["random"]))
+  
+  # tMAX times simulations
+  for (i in 1:tMAX){
+    agent_sequence = sample(n_agents)
+    for(j in seq(1,n_agents,2)){
+      p1 = players[agent_sequence[j]]
+      p2 = players[agent_sequence[j+1]]
+      
+      p1 = random_or_not(p1)
+      p2 = random_or_not(p2)
+      
+      #replace 'random' to other one in players
+      players[agent_sequence[j]] =p1
+      players[agent_sequence[j+1]] =p2
+      
+      result = referee(p1,p2)
+      
+      if (result == 'win'){
+        players[agent_sequence[j+1]] =p1
+      }else if(result == 'lose'){
+        players[agent_sequence[j]] =p2
+      }
+      
+    }
+  }
+  #透過gpt解決填入相對應欄位問題
+  table(players)
+}
+```
+
+```{r}
+## == init == 
+results_table = matrix(0, ncol = 3, nrow = n_simulation,
+                 dimnames = list(rep(1:n_simulation),c('scissors','rock','paper')))
+
+#execute n_simulation times simulations
+for (k in 1:n_simulation){
+  result = main(tMAX)
+  results_table[k,names(result)] = result #透過gpt解決填入相對應欄位問題
+}
+
+str_propotion = colMeans(results_table) / n_agents
+str_propotion
+
+```
