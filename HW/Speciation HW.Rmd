@@ -8,7 +8,8 @@ output: html_document
 ```{r}
 Sh =0.3
 Sd = 0.01
-m =0.05 
+m =0.05
+r = 0.05
 
 Place1 = c(0.99,0,0,0.01) #AB, Ab, aB, ab
 Place2 = c(0.02,0,0,0.98) #AB, Ab, aB, ab
@@ -16,7 +17,7 @@ Place2 = c(0.02,0,0,0.98) #AB, Ab, aB, ab
 fit1 = 1+c(1,-1,-1,-1)*c(Sd,Sh,Sh,Sd)
 fit2 = 1+c(-1,-1,-1,1)*c(Sd,Sh,Sh,Sd)
 
-tMAX =100
+tMAX =1000
 ```
 
 # migration function
@@ -54,22 +55,43 @@ natural_selection = function(gene,fit){
 ```{r }
 sexual_selection = function(gene,preference_matrix){
   
-  total_A = gene[1] + gene[2]
-  total_a = gene[3] + gene[4]
+  pair_matrix = outer(gene, gene) * preference_matrix
   
-  freq_A = total_A*preference_matrix[1,1]+total_a*preference_matrix[1,2]
-  freq_a = total_A*preference_matrix[2,1]+total_a*preference_matrix[2,2]
+  # way1 
+  pair_matrix = pair_matrix / sum(pair_matrix) 
   
-  next_gene = gene*c(freq_A,freq_A,freq_a,freq_a)
+  # way2
+  #z = rowSums(pair_matrix)
+  #z[is.na(z)] = 1
+  #pair_matrix = pair_matrix / z
   
-  next_gene/ sum(next_gene)
+  children <- rep(0, 4)
+  
+  for (mom in 1:4) {
+    for (dad in 1:4) {
+      if (mom == dad) { # 父母基因型相同
+        children[mom] <- children[mom] + pair_matrix[mom, dad]
+      } else if (mom + dad != 5) { # 父母基因型部分相同
+        children[c(mom, dad)] <- children[c(mom, dad)] + pair_matrix[mom, dad] / 2
+      } else { # 父母基因型完全相反
+        children[c(mom, dad)] <- children[c(mom, dad)] + pair_matrix[mom, dad] * (1 - r) / 2
+        other <- if (min(mom, dad) == 1) c(2, 3) else c(1, 4)
+        children[other] <- children[other] + pair_matrix[mom, dad] * r / 2
+      }
+    }
+  }
+  
+  children / sum(children)
 }
 ```
 
 # main function
 ```{r }
 main =function(alpha){
-  preference_matrix = matrix(c(1+alpha,1,1,1+alpha),nrow = 2)
+  preference_matrix = matrix(c(1+alpha,1+alpha,1,1,
+                             1+alpha,1+alpha,1,1,
+                             1,1,1+alpha,1+alpha,
+                             1,1,1+alpha,1+alpha),nrow = 4, ncol=4)
   
   data1 = matrix(0,nrow = tMAX+1, ncol = length(Place1),
                dimnames = list(rep(1:(tMAX+1)),c('AB', 'Ab', 'aB', 'ab')))

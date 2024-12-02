@@ -353,15 +353,19 @@ legend('right',c('AB', 'Ab', 'aB', 'ab'),lty=1:4,col=1:4)
 rm(list = ls())
 ## == parameters == 
 Sh =0.3
-Sd = 0v
+Sd = 0.01
 m =0.05 
-alpha = 0 #2 4
+alpha = 0 
+r = 0.05
 Place1 = c(0.99,0,0,0.01) #AB, Ab, aB, ab
 Place2 = c(0.02,0,0,0.98) #AB, Ab, aB, ab
 fit1 = 1+c(1,-1,-1,-1)*c(Sd,Sh,Sh,Sd)
 fit2 = 1+c(-1,-1,-1,1)*c(Sd,Sh,Sh,Sd)
-preference_matrix = matrix(c(1+alpha,1,1,1+alpha),nrow = 2)
-tMAX =100
+preference_matrix = matrix(c(1+alpha,1+alpha,1,1,
+                             1+alpha,1+alpha,1,1,
+                             1,1,1+alpha,1+alpha,
+                             1,1,1+alpha,1+alpha),nrow = 4, ncol=4)
+tMAX =1000
 
 ## == function ==
 migration = function(p1,p2){ #place1,placee2
@@ -377,15 +381,26 @@ natural_selection = function(gene,fit){
 
 sexual_selection = function(gene,preference_matrix){
   
-  total_A = gene[1] + gene[2]
-  total_a = gene[3] + gene[4]
+  pair_matrix = outer(gene, gene) * preference_matrix
+  pair_matrix = pair_matrix / sum(pair_matrix) 
   
-  freq_A = total_A*preference_matrix[1,1]+total_a*preference_matrix[1,2]
-  freq_a = total_A*preference_matrix[2,1]+total_a*preference_matrix[2,2]
+  children <- rep(0, 4)
   
-  next_gene = gene*c(freq_A,freq_A,freq_a,freq_a)
+  for (mom in 1:4) {
+    for (dad in 1:4) {
+      if (mom == dad) { # 父母基因型相同
+        children[mom] <- children[mom] + pair_matrix[mom, dad]
+      } else if (mom + dad != 5) { # 父母基因型部分相同
+        children[c(mom, dad)] <- children[c(mom, dad)] + pair_matrix[mom, dad] / 2
+      } else { # 父母基因型完全相反
+        children[c(mom, dad)] <- children[c(mom, dad)] + pair_matrix[mom, dad] * (1 - r) / 2
+        other <- if (min(mom, dad) == 1) c(2, 3) else c(1, 4)
+        children[other] <- children[other] + pair_matrix[mom, dad] * r / 2
+      }
+    }
+  }
   
-  next_gene/ sum(next_gene)
+  children / sum(children)
 }
 
 ## == main == 
@@ -413,9 +428,8 @@ for (t in 1:tMAX){
 data1[tMAX+1,]
 data2[tMAX+1,]
 
-par(mfrow = c(2, 1))
+par(mfrow = c(1,2))
 matplot(data1,type = 'l',xlab = 'tMAX', main = paste('Alpha =', alpha))
-legend('right',c('AB', 'Ab', 'aB', 'ab'),lty=1:4,col=1:4)
+legend('topright',c('AB', 'Ab', 'aB', 'ab'),lty=1:4,col=1:4)
 
 matplot(data2,type = 'l',xlab = 'tMAX')
-legend('right',c('AB', 'Ab', 'aB', 'ab'),lty=1:4,col=1:4)
