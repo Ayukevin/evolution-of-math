@@ -1,0 +1,197 @@
+---
+title: "chillguy"
+author: "H24114013"
+date: "2024-12-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## == 情況一：只會本土語言比例較高 65:35
+
+## == 情況二：IASB >> SAIB 沒差
+
+beta的變化量對 I 很敏感，影響集中程度
+gamma會加入累積
+
+#3 ==情況三：多數人都會外國語言，比例35:65
+意外的是，大陸語言迷因並沒有明顯取代小島語言迷因
+雖然大陸語言迷因的討論度會比小島語言還高
+但兩者的RA RB 累積曲線幾乎是一樣的
+
+## ==情況四：加入r0 的觀察值
+
+
+
+```{r}
+# 加載必要的庫
+library(deSolve)
+library(ggplot2)
+
+# 定義參數調整與模型模擬函數
+simulate_and_plot <- function(betaA, betaB, gammaA, gammaB) {
+  
+  # 參數設定
+  parameters <- c(betaA = betaA, betaB = betaB, gammaA = gammaA, gammaB = gammaB)
+  
+  # 初始條件 (總和 = 1)
+  initial_state <- c(
+    SA    = 0.6,
+    IA_Local = 0.05,
+    RA    = 0,
+    SASB  = 0.3,
+    IASB  = 0.02,
+    SAIB  = 0.02,
+    IAIB  = 0.01,
+    RASB  = 0,
+    RAIB  = 0,
+    SARB  = 0,
+    IARB  = 0,
+    RARB  = 0
+  )
+  
+  # 模擬時間
+  times <- seq(0, 500, by = 0.1)
+  
+  # 定義模型
+  meme_model <- function(time, state, parameters) {
+    with(as.list(c(state, parameters)), {
+      IA_Total <- IA_Local + IASB + IAIB + IARB
+      IB_Total <- SAIB + IAIB + RAIB
+      
+      dSA <- -betaA * SA * IA_Total
+      dIA_Local <- betaA * SA * IA_Total - gammaA * IA_Local
+      dRA <- gammaA * IA_Local
+      
+      dSASB <- -betaA * SASB * IA_Total - betaB * SASB * IB_Total
+      dIASB <- betaA * SASB * IA_Total - gammaA * IASB - betaB * IASB * IB_Total
+      dSAIB <- betaB * SASB * IB_Total - gammaB * SAIB - betaA * SAIB * IA_Total
+      dIAIB <- betaA * SAIB * IA_Total + betaB * IASB * IB_Total - gammaA * IAIB - gammaB * IAIB
+      
+      dRASB <- gammaA * IASB - betaB * RASB * IB_Total
+      dRAIB <- gammaA * IAIB + betaB * RASB * IB_Total - gammaB * RAIB
+      dSARB <- gammaB * SAIB - betaA * SARB * IA_Total
+      dIARB <- gammaB * IAIB + betaA * SARB * IA_Total - gammaA * IARB
+      dRARB <- gammaA * IARB + gammaB * RAIB
+
+      derivatives <- list(c(dSA, dIA_Local, dRA, dSASB, dIASB, dSAIB, dIAIB, dRASB, dRAIB, dSARB, dIARB, dRARB))
+    })
+  }
+  
+  # 模擬結果
+  result <- ode(y = initial_state, times = times, func = meme_model, parms = parameters)
+  result_df <- as.data.frame(result)
+  
+  # 計算 IA_Foreign
+  result_df$IA_Foreign <- result_df$IASB + result_df$IAIB + result_df$IARB
+  
+  # 繪製圖形
+  plot1 <- ggplot(result_df, aes(x = time)) +
+    geom_line(aes(y = IA_Local, color = "IA_Local")) +
+    geom_line(aes(y = IA_Foreign, color = "IA_Foreign")) +
+    labs(
+      title = paste(
+        "IA L vs F: betaA=", betaA,
+        ", betaB=", betaB,
+        ", gammaA=", gammaA,
+        ", gammaB=", gammaB,
+        "\nSA=", result_df$SA[1],
+        "SASB=", result_df$SASB[1]
+      ),
+      x = "時間",
+      y = "感染者數量",
+      color = "群體"
+    ) +
+    theme_minimal()
+  
+  # 計算總感染者
+  result_df$IA_Total <- result_df$IA_Local + result_df$IASB + result_df$IAIB + result_df$IARB
+  result_df$IB_Total <- result_df$SAIB + result_df$IAIB + result_df$RAIB
+
+  # 繪製圖形
+  plot2 <- ggplot(result_df, aes(x = time)) +
+    geom_line(aes(y = IA_Total, color = "IA_Total")) +
+    geom_line(aes(y = IB_Total, color = "IB_Total")) +
+    labs(
+      title = paste(
+        "IA vs IB: betaA =", betaA,
+        ", betaB =", betaB,
+        ", gammaA =", gammaA,
+        ", gammaB =", gammaB,
+        "\nSA=", result_df$SA[1],
+        "SASB=", result_df$SASB[1]
+      ),
+      x = "時間",
+      y = "感染者數量",
+      color = "群體"
+    ) +
+    theme_minimal()
+  # 計算總感染者
+  result_df$RA_Total <- result_df$RA + result_df$RASB + result_df$RAIB+ result_df$RARB
+  result_df$RB_Total <- result_df$SARB + result_df$IARB+ result_df$RARB
+  # 繪製圖形
+  plot3 <- ggplot(result_df, aes(x = time)) +
+    geom_line(aes(y = IA_Total, color = "IA_Total")) +
+    geom_line(aes(y = RA_Total, color = "RA_Total")) +
+    geom_line(aes(y = IB_Total, color = "IB_Total")) +
+    geom_line(aes(y = RB_Total, color = "RB_Total")) +
+    labs(
+      title = paste(
+        "IA &RA &IB &RB: betaA =", betaA,
+        ", betaB =", betaB,
+        ", gammaA =", gammaA,
+        ", gammaB =", gammaB,
+        "\nSA=", result_df$SA[1],
+        "SASB=", result_df$SASB[1]
+      ),
+      x = "時間",
+      y = "感染者數量",
+      color = "群體"
+    ) +
+    theme_minimal()
+  
+  result_df$SA_Total = result_df$SA + result_df$SASB + result_df$SAIB+ result_df$SARB
+  result_df$SB_Total = result_df$SASB + result_df$IASB+ result_df$RASB
+    
+  
+  result_df$R0_A = result_df$SA_Total * betaA / gammaA
+  result_df$R0_B = result_df$SB_Total * betaB / gammaB
+  plot4 <- ggplot(result_df, aes(x = time)) +
+    geom_line(aes(y = R0_A, color = "R0_A")) +
+    geom_line(aes(y = R0_B, color = "R0_B")) +
+    labs(
+      title = paste(
+        "IA vs IB: betaA =", betaA,
+        ", betaB =", betaB,
+        ", gammaA =", gammaA,
+        ", gammaB =", gammaB,
+        "\nSA=", result_df$SA[1],
+        "SASB=", result_df$SASB[1]
+      ),
+      x = "時間",
+      y = "感染者數量",
+      color = "群體"
+    ) +
+    theme_minimal()
+  
+  
+  return(list(plot1 = plot1, plot2 = plot2, plot3 =plot3, plot4=plot4))
+}
+```
+
+
+```{r}
+# 測試模擬與繪圖
+plots <- simulate_and_plot(betaA = 0.02, betaB = 0.12,
+                           gammaA = 0.01, gammaB = 0.01)
+
+# 顯示圖形
+print(plots$plot1)
+print(plots$plot2)
+print(plots$plot3)
+print(plots$plot4)
+```
+
+
